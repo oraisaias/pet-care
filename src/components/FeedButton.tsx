@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Text, StyleSheet, View, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { usePollitoContext } from '../context/PollitoContext';
 import { useFoodContext } from '../context/FoodContext';
@@ -6,6 +6,7 @@ import { PollitoState } from '../types/pollito';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PanGestureHandler, PanGestureHandlerGestureEvent, HandlerStateChangeEvent } from 'react-native-gesture-handler';
+import FoodSelectionModal from './FoodSelectionModal';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const DRAG_LIMIT_X = 40;
@@ -14,9 +15,10 @@ const DRAG_LIMIT_Y_DOWN = 40;
 
 export type FeedButtonDragProps = {
   onDropOnPollito?: (event: HandlerStateChangeEvent<Record<string, unknown>>) => void;
+  onOpenFoodModal?: () => void;
 };
 
-const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
+const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito, onOpenFoodModal }) => {
   const { pollito, feed, revive } = usePollitoContext();
   const { selectedFood, nextFood, prevFood } = useFoodContext();
   const buttonStartY = useRef<number | null>(null);
@@ -50,6 +52,7 @@ const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
   }));
 
   const getFoodImage = () => {
+    switch (selectedFood) {
       case 'mazorca':
         return require('../../assets/comida/mazorca.png');
       case 'arroz':
@@ -87,6 +90,7 @@ const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
     const endX = Number(event.nativeEvent.absoluteX);
     const deltaY = dragStartY.current !== null ? endY - dragStartY.current : 0;
     const deltaX = dragStartX.current !== null ? endX - dragStartX.current : 0;
+    
     // Solo alimentar si el botón se arrastra fuera del 25% inferior (hacia arriba)
     if (
       dragStartY.current !== null &&
@@ -101,6 +105,9 @@ const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
       } else {
         prevFood(); // Izquierda = alimento anterior
       }
+    } else if (deltaY > 0 && Math.abs(deltaY) > DRAG_LIMIT_Y_DOWN / 2) {
+      // Mostrar modal si se arrastra hacia abajo
+      if (onOpenFoodModal) onOpenFoodModal();
     }
     // Reset
     translateX.value = withSpring(0);
