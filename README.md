@@ -1,110 +1,171 @@
-# Pet Care App - Pollito Virtual
+# 🐤 Pet Care App - Pollito Virtual
 
-Una aplicación React Native con TypeScript que simula el cuidado de un pollito virtual, inspirada en Talking Tom pero simplificada.
+Una aplicación móvil desarrollada en **React Native con TypeScript** que simula el cuidado de un pollito virtual, inspirada en juegos como Talking Tom pero enfocada en la alimentación y supervivencia del pollito.
 
-## Características
+## 📱 Capturas de Pantalla
 
-### 🐤 Sistema de Pollito Virtual
-- **Animación inicial**: El pollito sale del cascarón (`saliendo.json`)
-- **Estados del pollito**:
-  - **Feliz**: Muestra `lovely.json` en loop
-  - **Hambriento**: Alterna entre `hambre.json` y `bell.json` cada segundo
-  - **Comiendo**: Muestra `lovely.json` por 3 segundos
+<div align="center">
+  <img src="assets/resultados/prueba1.png" width="200" alt="Estado Feliz" />
+  <img src="assets/resultados/prueba2.png" width="200" alt="Estado Hambriento" />
+  <img src="assets/resultados/prueba3.png" width="200" alt="Estado Muy Hambriento" />
+</div>
 
-### 🍽️ Sistema de Hambre
-- **Barra de hambre visual**: Muestra el nivel actual de hambre (0-100%)
-- **Colores dinámicos**:
-  - 🟢 Verde (70%+): "Lleno"
-  - 🟠 Naranja (30-70%): "Normal" 
-  - 🔴 Rojo (<30%): "Hambriento"
-- **Decremento automático**: El hambre disminuye 1 punto por segundo
-- **Alimentación**: Al dar de comer, recupera 30 puntos de hambre
+<div align="center">
+  <img src="assets/resultados/prueba4.png" width="200" alt="Estado Lleno con Cuenta Regresiva" />
+  <img src="assets/resultados/prueba5.png" width="200" alt="Selección de Comida" />
+  <img src="assets/resultados/prueba6.png" width="200" alt="Estado Muerto" />
+</div>
 
-### 🎮 Interfaz de Usuario
-- **Diseño minimalista** con fondo azul claro
-- **Barra de hambre** en la parte superior con porcentaje
-- **Botón de alimentar** grande y accesible
-- **Animaciones fluidas** con Lottie
+## 🎮 Características Principales
 
-## Arquitectura Orientada a Objetos
+### 🐤 Sistema de Estados del Pollito
+El pollito tiene **6 estados diferentes** que cambian según su nivel de hambre:
 
-### Clases Principales
+- **😊 Feliz**: Estado normal cuando está bien alimentado (hambre > 50%)
+- **😋 Hambriento**: Cuando el hambre está entre 25-50%
+- **🥵 Muy Hambriento**: Cuando el hambre está entre 0-25%
+- **🍽️ Comiendo**: Durante 3 segundos después de alimentarlo
+- **🟢 Lleno**: Cuando alcanza el máximo de hambre (100%) + tiempo de digestión
+- **💀 Muerto**: Cuando el hambre llega a 0%
 
-#### `Pollito`
-- Maneja la lógica del comportamiento del pollito
-- Controla estados y sistema de hambre
-- Implementa `IPollitoBehavior`
+### 🍽️ Sistema de Alimentación Estratégico
+- **5 tipos de comida** con diferentes valores nutricionales:
+  - 🌽 Mazorca: +4 hambre
+  - 🍚 Arroz: +5 hambre  
+  - 🍔 Hamburguesa: +9 hambre
+  - 🍪 Galleta: +6 hambre
+  - 🍉 Sandía: +7 hambre
 
-#### `HungryAnimationController`
-- Controla las animaciones del pollito hambriento
-- Alterna entre animaciones automáticamente
-- Implementa `IAnimationController`
+### ⏰ Sistema de Digestión Inteligente
+- **Tiempo aleatorio**: Cuando el pollito se llena, tarda un tiempo aleatorio entre **0-59 minutos** antes de empezar a bajar el hambre
+- **Cuenta regresiva visual**: Muestra el tiempo restante hasta la próxima comida
+- **Persistencia**: El estado se mantiene incluso si la app se cierra
 
-#### `PetCareGame`
-- Clase principal que coordina toda la aplicación
-- Maneja la animación inicial y monitoreo de estado
-- Implementa `IPollitoBehavior` (delega al pollito interno)
+### 🎯 Interfaz Interactiva
+- **Botón de alimentar arrastrable**: 
+  - Arrastrar hacia arriba para alimentar
+  - Arrastrar horizontalmente para cambiar comida
+  - Arrastrar hacia abajo para abrir modal de selección
+- **Barra de hambre dinámica**: Cambia de color según el nivel (verde → naranja → rojo)
+- **Sistema de puntos**: Ganas puntos cada vez que alimentas al pollito
 
-### Componentes React
+## 🏗️ Arquitectura del Proyecto
 
-#### `HungerBar`
-- Muestra la barra de hambre visual
-- Cambia colores según el nivel de hambre
-- Incluye porcentaje y estado textual
+### 📁 Estructura de Carpetas
+```
+src/
+├── components/        # Componentes React
+│   ├── FeedButton.tsx
+│   ├── FoodSelectionModal.tsx
+│   ├── HungerBar.tsx
+│   ├── PollitoArea.tsx
+│   └── PollitoView.tsx
+├── context/          # Estado Global (Context API)
+│   ├── FoodContext.tsx
+│   └── PollitoContext.tsx
+├── hooks/           # Hooks personalizados
+│   └── useInterval.ts
+├── screens/         # Pantallas
+│   └── HomeScreen.tsx
+└── types/           # Tipos TypeScript
+    └── pollito.ts
+```
 
-#### `Pollito`
-- Renderiza las animaciones según el estado
-- Usa `HungryPollito` para el estado hambriento
+### 🔧 Tecnologías Utilizadas
+- **React Native** con TypeScript
+- **Expo** para desarrollo rápido
+- **React Native Reanimated** para animaciones fluidas
+- **React Native Gesture Handler** para gestos táctiles
+- **AsyncStorage** para persistencia de datos
+- **Context API** para manejo de estado global
 
-#### `HungryPollito`
-- Maneja las animaciones alternadas del pollito hambriento
-- Usa `HungryAnimationController`
+## 🚀 Instalación y Uso
 
-## Instalación y Uso
+### Prerrequisitos
+- Node.js (versión 16 o superior)
+- npm o yarn
+- Expo CLI
+- Expo Go app en tu dispositivo móvil
 
-1. **Instalar dependencias**:
+### Pasos de Instalación
+
+1. **Clonar el repositorio**
+   ```bash
+   git clone <url-del-repositorio>
+   cd pet-care
+   ```
+
+2. **Instalar dependencias**
    ```bash
    npm install
+   # o
+   yarn install
    ```
 
-2. **Ejecutar la aplicación**:
+3. **Ejecutar la aplicación**
    ```bash
    npm start
+   # o
+   yarn start
    ```
 
-3. **Usar en dispositivo/simulador**:
+4. **Usar en dispositivo/simulador**
    - Escanea el código QR con Expo Go
    - O presiona 'i' para iOS o 'a' para Android
 
-## Tecnologías Utilizadas
+## 🎯 Mecánicas de Juego
 
-- **React Native** con TypeScript
-- **Expo** para desarrollo rápido
-- **Lottie React Native** para animaciones
-- **Paradigma Orientado a Objetos** para arquitectura limpia
+### 🕐 Sistema de Tiempo Real
+- **Decremento automático**: El hambre disminuye 1 punto por segundo
+- **Persistencia inteligente**: Si la app estuvo cerrada, calcula cuánto hambre perdió el pollito
+- **Digestión aleatoria**: Tiempo variable antes de que pueda tener hambre nuevamente
 
-## Estructura del Proyecto
+### 🏆 Sistema de Puntuación
+- **Puntos por alimentación**: +1 punto cada vez que alimentas al pollito
+- **Estrategia**: Diferentes comidas dan diferentes cantidades de hambre
+- **Supervivencia**: El objetivo es mantener al pollito vivo el mayor tiempo posible
 
-```
-src/
-├── classes/           # Clases principales (OO)
-│   ├── Pollito.ts
-│   ├── AnimationController.ts
-│   ├── PetCareGame.ts
-│   └── index.ts
-├── components/        # Componentes React
-│   ├── Pollito.tsx
-│   ├── HungryPollito.tsx
-│   ├── HungerBar.tsx
-│   └── PetCareApp.tsx
-└── types/            # Tipos TypeScript
-    └── index.ts
-```
+### 🎮 Controles Intuitivos
+- **Tap simple**: Para alimentar rápidamente
+- **Drag & Drop**: Para interacciones más complejas
+- **Gestos**: Cambiar comida y abrir modales con gestos naturales
 
-## Animaciones
+## 📊 Características Técnicas
 
-Las animaciones están ubicadas en `assets/pollito/`:
-- `saliendo.json`: Pollito saliendo del cascarón
-- `lovely.json`: Pollito feliz
-- `hambre.json`: Pollito hambriento
-- `bell.json`: Pollito haciendo sonar campana (advertencia) 
+### 🔄 Estado Global
+- **PollitoContext**: Maneja el estado del pollito, hambre, puntos y lógica de alimentación
+- **FoodContext**: Gestiona la selección de tipos de comida
+- **Persistencia**: Guardado automático del estado en AsyncStorage
+
+### 🎨 Interfaz de Usuario
+- **Diseño minimalista** con fondo azul claro
+- **Animaciones fluidas** para transiciones de estado
+- **Responsive design** que se adapta a diferentes tamaños de pantalla
+- **Feedback visual** inmediato para todas las acciones
+
+### 🔧 Optimizaciones
+- **Rendimiento**: Uso de useCallback y useMemo para optimizar re-renders
+- **Memoria**: Limpieza automática de timers y listeners
+- **Batería**: Actualización eficiente del estado cada segundo
+
+## 🤝 Contribuir
+
+¡Las contribuciones son bienvenidas! Si quieres contribuir al proyecto:
+
+1. Fork el repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+## 👨‍💻 Autor
+
+Desarrollado con ❤️ usando React Native y TypeScript.
+
+---
+
+**¡Disfruta cuidando de tu pollito virtual! 🐤✨** 
