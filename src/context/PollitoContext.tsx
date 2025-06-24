@@ -18,9 +18,9 @@ interface PollitoContextType {
 
 const PollitoContext = createContext<PollitoContextType | undefined>(undefined);
 
-// Función para generar tiempo aleatorio de digestión (0-159 minutos)
+// Función para generar tiempo aleatorio de digestión (0-59 minutos)
 const generateDigestionTime = (): number => {
-  return Math.floor(Math.random() * 160); // 0-159 minutos
+  return Math.floor(Math.random() * 60); // 0-59 minutos
 };
 
 export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

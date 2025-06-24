@@ -35,24 +35,6 @@ const HungerBar: React.FC = () => {
     return `${hours}h ${remainingMinutes}m`;
   };
 
-  const renderThirdBlock = () => {
-    if (pollito.state === PollitoState.LLENO) {
-      return (
-        <View style={styles.infoBlock}>
-          <Text style={styles.label}>Próxima comida</Text>
-          <Text style={styles.value}>{formatTime(countdown)}</Text>
-        </View>
-      );
-    } else {
-      return (
-        <View style={styles.infoBlock}>
-          <Text style={styles.label}>Revivir</Text>
-          <Text style={styles.value}>{pollito.revivePoints}</Text>
-        </View>
-      );
-    }
-  };
-
   return (
     <View style={styles.card}>
       <View style={styles.row}>
@@ -64,8 +46,15 @@ const HungerBar: React.FC = () => {
           <Text style={styles.label}>Puntos</Text>
           <Text style={styles.value}>{pollito.points}</Text>
         </View>
-        {renderThirdBlock()}
       </View>
+      
+      {pollito.state === PollitoState.LLENO && (
+        <View style={styles.countdownContainer}>
+          <Text style={styles.countdownLabel}>Próxima comida en:</Text>
+          <Text style={styles.countdownValue}>{formatTime(countdown)}</Text>
+        </View>
+      )}
+      
       <View style={styles.barBackground}>
         <View
           style={[
@@ -107,12 +96,33 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     color: '#888',
-    marginBottom: 2,
+    marginBottom: 4,
+    fontWeight: '500',
   },
   value: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#222',
+  },
+  countdownContainer: {
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  countdownLabel: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  countdownValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#28a745',
   },
   barBackground: {
     width: '100%',
