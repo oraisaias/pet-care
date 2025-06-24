@@ -3,9 +3,10 @@ import { PollitoState, IPollitoBehavior } from '../types';
 export class Pollito implements IPollitoBehavior {
   private currentState: PollitoState;
   private hungerLevel: number;
+  private points: number = 0;
   private readonly maxHunger: number = 100;
   private readonly hungerDecreaseRate: number = 1; // Puntos por segundo
-  private readonly feedAmount: number = 30; // Puntos que se recuperan al alimentar
+  private readonly feedAmount: number = 3; // 3 puntos (3% del máximo)
   private readonly hungerThreshold: number = 50; // Umbral para considerar hambriento
   private readonly fullHungerDuration: number = 10000; // 10 segundos cuando está lleno
   private hungerTimer: NodeJS.Timeout | null = null;
@@ -31,11 +32,18 @@ export class Pollito implements IPollitoBehavior {
     return this.maxHunger;
   }
 
+  public getPoints(): number {
+    return this.points;
+  }
+
   public feed(): void {
     this.clearTimers();
     this.currentState = PollitoState.COMIENDO;
     
-    // Aumentar el nivel de hambre
+    // Incrementar puntos por alimentar
+    this.points += 1;
+    
+    // Aumentar el nivel de hambre (máximo 3 puntos)
     this.hungerLevel = Math.min(this.maxHunger, this.hungerLevel + this.feedAmount);
     
     // Después de 3 segundos, vuelve a estar feliz

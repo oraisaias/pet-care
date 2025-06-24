@@ -22,6 +22,10 @@ export class PetCareGame implements IPollitoBehavior {
     return this.pollito.getMaxHunger();
   }
 
+  public getPoints(): number {
+    return this.pollito.getPoints();
+  }
+
   public feed(): void {
     this.pollito.feed();
   }

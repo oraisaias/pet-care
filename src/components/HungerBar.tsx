@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { HungerBarProps } from '../types';
 
-const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger }) => {
+const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger, points }) => {
   const hungerPercentage = (currentHunger / maxHunger) * 100;
   
   const getBarColor = () => {
@@ -29,8 +29,14 @@ const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{getHungerEmoji()} Hambre</Text>
-        <Text style={styles.percentage}>{Math.round(hungerPercentage)}%</Text>
+        <View style={styles.hungerSection}>
+          <Text style={styles.title}>{getHungerEmoji()} Hambre</Text>
+          <Text style={styles.percentage}>{Math.round(hungerPercentage)}%</Text>
+        </View>
+        <View style={styles.pointsSection}>
+          <Text style={styles.pointsTitle}>⭐ Puntos</Text>
+          <Text style={styles.pointsValue}>{points}</Text>
+        </View>
       </View>
       
       <View style={styles.barContainer}>
@@ -76,6 +82,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  hungerSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flex: 1,
+    marginRight: 20,
+  },
+  pointsSection: {
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFB74D',
+  },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -85,6 +107,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#666',
+  },
+  pointsTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#E65100',
+  },
+  pointsValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#E65100',
   },
   barContainer: {
     marginBottom: 8,

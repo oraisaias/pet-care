@@ -13,6 +13,7 @@ const PetCareApp: React.FC = () => {
   const [currentState, setCurrentState] = useState<PollitoState>(PollitoState.FELIZ);
   const [showInitialAnimation, setShowInitialAnimation] = useState(true);
   const [hungerLevel, setHungerLevel] = useState(100);
+  const [points, setPoints] = useState(0);
 
   // Timer para la animación inicial
   useEffect(() => {
@@ -29,6 +30,7 @@ const PetCareApp: React.FC = () => {
       const stateCheckInterval = setInterval(() => {
         const newState = game.getCurrentState();
         const newHungerLevel = game.getHungerLevel();
+        const newPoints = game.getPoints();
         
         if (newState !== currentState) {
           setCurrentState(newState);
@@ -37,13 +39,17 @@ const PetCareApp: React.FC = () => {
         if (newHungerLevel !== hungerLevel) {
           setHungerLevel(newHungerLevel);
         }
+
+        if (newPoints !== points) {
+          setPoints(newPoints);
+        }
       }, 100);
 
       return () => {
         clearInterval(stateCheckInterval);
       };
     }
-  }, [showInitialAnimation, game, currentState, hungerLevel]);
+  }, [showInitialAnimation, game, currentState, hungerLevel, points]);
 
   // Cleanup al desmontar
   useEffect(() => {
@@ -81,7 +87,8 @@ const PetCareApp: React.FC = () => {
       <View style={styles.hungerBarContainer}>
         <HungerBar 
           currentHunger={hungerLevel} 
-          maxHunger={game.getMaxHunger()} 
+          maxHunger={game.getMaxHunger()}
+          points={points}
         />
       </View>
 
