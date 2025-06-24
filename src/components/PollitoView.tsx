@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { usePollitoContext } from '../context/PollitoContext';
 import { PollitoState } from '../types/pollito';
 
@@ -31,13 +31,52 @@ const stateInfo = {
   },
 };
 
+const pollitoImages = {
+  [PollitoState.LLENO]: require('../../assets/pollito/gordito.png'),
+  [PollitoState.MUERTO]: require('../../assets/comida/dead.png'),
+  comiendo: [
+    require('../../assets/pollito/comiendo_izquierdo.png'),
+    require('../../assets/pollito/comiendo_derecho.png'),
+  ],
+};
+
 export const PollitoView: React.FC = () => {
   const { pollito } = usePollitoContext();
   const info = stateInfo[pollito.state];
+  const showImage = pollito.state === PollitoState.LLENO || pollito.state === PollitoState.MUERTO;
+  const imageSource = pollito.state === PollitoState.LLENO
+    ? pollitoImages[PollitoState.LLENO]
+    : pollito.state === PollitoState.MUERTO
+      ? pollitoImages[PollitoState.MUERTO]
+      : undefined;
+
+  // Animación de comiendo
+  const [comiendoFrame, setComiendoFrame] = useState(0);
+  useEffect(() => {
+    if (pollito.state === PollitoState.COMIENDO) {
+      setComiendoFrame(0);
+      const interval = setInterval(() => {
+        setComiendoFrame(f => (f === 0 ? 1 : 0));
+      }, 400);
+      return () => clearInterval(interval);
+    } else {
+      setComiendoFrame(0);
+    }
+  }, [pollito.state]);
 
   return (
     <View style={[styles.container, { borderColor: info.color }]}> 
-      <Text style={[styles.emoji, { color: info.color }]}>{info.emoji}</Text>
+      {pollito.state === PollitoState.COMIENDO ? (
+        <Image
+          source={pollitoImages.comiendo[comiendoFrame]}
+          style={styles.pollitoImage}
+          resizeMode="contain"
+        />
+      ) : showImage && imageSource ? (
+        <Image source={imageSource} style={styles.pollitoImage} resizeMode="contain" />
+      ) : (
+        <Text style={[styles.emoji, { color: info.color }]}>{info.emoji}</Text>
+      )}
       <Text style={[styles.stateText, { color: info.color }]}>{pollito.state.toUpperCase()}</Text>
       <Text style={styles.label}>{info.label}</Text>
     </View>
@@ -61,6 +100,11 @@ const styles = StyleSheet.create({
   },
   emoji: {
     fontSize: 64,
+    marginBottom: 8,
+  },
+  pollitoImage: {
+    width: 120,
+    height: 120,
     marginBottom: 8,
   },
   stateText: {
