@@ -9,9 +9,12 @@ export class Pollito implements IPollitoBehavior {
   private readonly hungerDecreaseRate: number = 1; // Puntos por segundo
   private readonly feedAmount: number = 3; // 3 puntos (3% del máximo)
   private readonly hungerThreshold: number = 50; // Umbral para considerar hambriento
+  private readonly fullHungerDuration: number = 10000; // 10 segundos cuando está lleno
   private hungerTimer: NodeJS.Timeout | null = null;
   private eatingTimer: NodeJS.Timeout | null = null;
+  private fullHungerTimer: NodeJS.Timeout | null = null;
   private readonly EATING_DURATION = 3000; // 3 segundos
+  private isFullState: boolean = false; // Bandera para controlar el período de estar lleno
 
   constructor() {
     this.currentState = PollitoState.FELIZ;
@@ -91,37 +94,47 @@ export class Pollito implements IPollitoBehavior {
       return;
     }
 
-    // Verificar si debe cambiar a estado lleno (solo mientras esté al 100%)
-    if (this.hungerLevel >= this.maxHunger) {
-      if (this.currentState !== PollitoState.LLENO) {
-        this.currentState = PollitoState.LLENO;
-      }
-    } else {
-      // Si no está al 100%, volver al estado normal
-      if (this.currentState === PollitoState.LLENO) {
+    // Verificar si debe cambiar a estado lleno
+    if (this.hungerLevel >= this.maxHunger && this.currentState !== PollitoState.LLENO) {
+      this.currentState = PollitoState.LLENO;
+      this.isFullState = true; // Activar bandera
+      this.stopHungerDecrease();
+      // Después de 10 segundos, permitir que la barra baje
+      this.fullHungerTimer = setTimeout(() => {
+        this.isFullState = false; // Desactivar bandera
+        this.startHungerDecrease();
+      }, this.fullHungerDuration);
+      return;
+    }
+
+    // Verificar si debe salir del estado lleno cuando el hambre baja del 100%
+    if (this.currentState === PollitoState.LLENO && this.hungerLevel < this.maxHunger) {
+      this.currentState = PollitoState.FELIZ;
+    }
+
+    // Solo verificar otros estados si no está lleno
+    if (this.currentState !== PollitoState.LLENO) {
+      // Verificar si debe cambiar a estado hambriento (solo si está en estado por defecto)
+      if (this.currentState === PollitoState.FELIZ && this.isHungry()) {
+        this.currentState = PollitoState.HAMBRIENTO;
+      } else if (this.currentState === PollitoState.HAMBRIENTO && !this.isHungry()) {
+        // Si ya no está hambriento, volver al estado por defecto
         this.currentState = PollitoState.FELIZ;
       }
-    }
-
-    // Verificar si debe cambiar a estado hambriento
-    if (this.currentState === PollitoState.FELIZ && this.isHungry()) {
-      this.currentState = PollitoState.HAMBRIENTO;
-    }
-  }
-
-  private checkFullHungerState(): void {
-    if (this.hungerLevel >= this.maxHunger) {
-      this.currentState = PollitoState.LLENO;
-    } else {
-      this.startHungerDecrease();
     }
   }
 
   private startHungerDecrease(): void {
-    this.hungerTimer = setInterval(() => {
-      this.hungerLevel = Math.max(0, this.hungerLevel - this.hungerDecreaseRate);
-      this.updateState();
-    }, 1000); // Actualizar cada segundo
+    // Solo iniciar si no hay un timer activo y no está lleno
+    if (!this.hungerTimer && !this.isFullState) {
+      this.hungerTimer = setInterval(() => {
+        // Solo procesar si no está en estado lleno
+        if (!this.isFullState) {
+          this.hungerLevel = Math.max(0, this.hungerLevel - this.hungerDecreaseRate);
+          this.updateState();
+        }
+      }, 1000); // Actualizar cada segundo
+    }
   }
 
   private stopHungerDecrease(): void {
@@ -139,6 +152,10 @@ export class Pollito implements IPollitoBehavior {
     if (this.eatingTimer) {
       clearTimeout(this.eatingTimer);
       this.eatingTimer = null;
+    }
+    if (this.fullHungerTimer) {
+      clearTimeout(this.fullHungerTimer);
+      this.fullHungerTimer = null;
     }
   }
 
