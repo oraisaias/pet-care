@@ -1,56 +1,54 @@
-import { PollitoState } from '../types';
+import { PollitoState, IPollitoBehavior } from '../types';
 import { Pollito } from './Pollito';
 
-export class PetCareGame {
+export class PetCareGame implements IPollitoBehavior {
   private pollito: Pollito;
-  private currentState: PollitoState;
-  private showInitialAnimation: boolean = true;
-  private initialAnimationTimer: NodeJS.Timeout | null = null;
   private stateUpdateTimer: NodeJS.Timeout | null = null;
 
   constructor() {
     this.pollito = new Pollito();
-    this.currentState = this.pollito.getCurrentState();
-    this.startInitialAnimation();
     this.startStateMonitoring();
   }
 
   public getCurrentState(): PollitoState {
-    return this.currentState;
+    return this.pollito.getCurrentState();
   }
 
-  public isShowingInitialAnimation(): boolean {
-    return this.showInitialAnimation;
+  public getHungerLevel(): number {
+    return this.pollito.getHungerLevel();
+  }
+
+  public getMaxHunger(): number {
+    return this.pollito.getMaxHunger();
+  }
+
+  public feed(): void {
+    this.pollito.feed();
+  }
+
+  public isHungry(): boolean {
+    return this.pollito.isHungry();
+  }
+
+  public updateState(): void {
+    this.pollito.updateState();
   }
 
   public feedPollito(): void {
-    this.pollito.feed();
-    this.currentState = this.pollito.getCurrentState();
+    this.feed();
   }
 
   public canFeed(): boolean {
-    return this.currentState !== PollitoState.COMIENDO;
-  }
-
-  private startInitialAnimation(): void {
-    this.initialAnimationTimer = setTimeout(() => {
-      this.showInitialAnimation = false;
-    }, 3000); // 3 segundos para la animación inicial
+    return this.getCurrentState() !== PollitoState.COMIENDO;
   }
 
   private startStateMonitoring(): void {
     this.stateUpdateTimer = setInterval(() => {
-      const newState = this.pollito.getCurrentState();
-      if (newState !== this.currentState) {
-        this.currentState = newState;
-      }
-    }, 100); // Verificar cada 100ms
+      this.updateState();
+    }, 1000); // Verificar cada segundo
   }
 
   public destroy(): void {
-    if (this.initialAnimationTimer) {
-      clearTimeout(this.initialAnimationTimer);
-    }
     if (this.stateUpdateTimer) {
       clearInterval(this.stateUpdateTimer);
     }

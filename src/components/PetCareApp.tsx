@@ -3,36 +3,54 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-nati
 import LottieView from 'lottie-react-native';
 import { PollitoState } from '../types';
 import Pollito from './Pollito';
+import HungerBar from './HungerBar';
 import { PetCareGame } from '../classes/PetCareGame';
-import { Pollito as PollitoClass } from '../classes/Pollito';
 
 const { width, height } = Dimensions.get('window');
 
 const PetCareApp: React.FC = () => {
   const [game] = useState(() => new PetCareGame());
-  const [pollito] = useState(() => new PollitoClass());
   const [currentState, setCurrentState] = useState<PollitoState>(PollitoState.FELIZ);
   const [showInitialAnimation, setShowInitialAnimation] = useState(true);
+  const [hungerLevel, setHungerLevel] = useState(100);
 
+  // Timer para la animación inicial
   useEffect(() => {
-    const stateCheckInterval = setInterval(() => {
-      const newState = game.getCurrentState();
-      const newShowInitial = game.isShowingInitialAnimation();
-      
-      if (newState !== currentState) {
-        setCurrentState(newState);
-      }
-      
-      if (newShowInitial !== showInitialAnimation) {
-        setShowInitialAnimation(newShowInitial);
-      }
-    }, 100);
+    const initialTimer = setTimeout(() => {
+      setShowInitialAnimation(false);
+    }, 3000); // 3 segundos para la animación inicial
 
+    return () => clearTimeout(initialTimer);
+  }, []);
+
+  // Timer para monitorear el estado del juego
+  useEffect(() => {
+    if (!showInitialAnimation) {
+      const stateCheckInterval = setInterval(() => {
+        const newState = game.getCurrentState();
+        const newHungerLevel = game.getHungerLevel();
+        
+        if (newState !== currentState) {
+          setCurrentState(newState);
+        }
+
+        if (newHungerLevel !== hungerLevel) {
+          setHungerLevel(newHungerLevel);
+        }
+      }, 100);
+
+      return () => {
+        clearInterval(stateCheckInterval);
+      };
+    }
+  }, [showInitialAnimation, game, currentState, hungerLevel]);
+
+  // Cleanup al desmontar
+  useEffect(() => {
     return () => {
-      clearInterval(stateCheckInterval);
       game.destroy();
     };
-  }, [game, currentState, showInitialAnimation]);
+  }, [game]);
 
   const handleFeed = () => {
     if (game.canFeed()) {
@@ -46,7 +64,7 @@ const PetCareApp: React.FC = () => {
 
   if (showInitialAnimation) {
     return (
-      <View style={styles.container}>
+      <View style={styles.initialContainer}>
         <LottieView
           source={require('../../assets/pollito/saliendo.json')}
           autoPlay
@@ -59,10 +77,20 @@ const PetCareApp: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* Barra de hambre en la parte superior */}
+      <View style={styles.hungerBarContainer}>
+        <HungerBar 
+          currentHunger={hungerLevel} 
+          maxHunger={game.getMaxHunger()} 
+        />
+      </View>
+
+      {/* Contenedor del pollito */}
       <View style={styles.pollitoContainer}>
-        <Pollito pollito={pollito} onStateChange={handleStateChange} />
+        <Pollito pollito={game} onStateChange={handleStateChange} />
       </View>
       
+      {/* Botón de alimentar */}
       <TouchableOpacity 
         style={[
           styles.feedButton,
@@ -78,21 +106,29 @@ const PetCareApp: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  initialContainer: {
+    flex: 1,
+    backgroundColor: '#f0f8ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f0f8ff', // Fondo azul claro suave
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+    paddingTop: 50, // Espacio para el status bar
   },
   initialAnimation: {
     width: width * 0.8,
     height: height * 0.6,
   },
+  hungerBarContainer: {
+    paddingTop: 10,
+  },
   pollitoContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   feedButton: {
     backgroundColor: '#4CAF50',
@@ -100,6 +136,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 25,
     marginBottom: 50,
+    marginHorizontal: 20,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
@@ -116,6 +153,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

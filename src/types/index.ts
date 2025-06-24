@@ -9,6 +9,8 @@ export interface IPollitoBehavior {
   getCurrentState(): PollitoState;
   feed(): void;
   isHungry(): boolean;
+  getHungerLevel(): number;
+  getMaxHunger(): number;
 }
 
 export interface IAnimationController {
@@ -24,4 +26,9 @@ export interface PollitoProps {
 
 export interface HungryPollitoProps {
   onStateChange: (state: PollitoState) => void;
+}
+
+export interface HungerBarProps {
+  currentHunger: number;
+  maxHunger: number;
 } 
