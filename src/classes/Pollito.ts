@@ -52,10 +52,22 @@ export class Pollito implements IPollitoBehavior {
     // Aumentar el nivel de hambre (máximo 3 puntos)
     this.hungerLevel = Math.min(this.maxHunger, this.hungerLevel + this.feedAmount);
     
-    // Después de 3 segundos, vuelve a estar feliz
+    // Después de 3 segundos, verificar el estado
     this.eatingTimer = setTimeout(() => {
-      this.currentState = PollitoState.FELIZ;
-      this.startHungerDecrease();
+      // Verificar si debe estar lleno inmediatamente
+      if (this.hungerLevel >= this.maxHunger) {
+        this.currentState = PollitoState.LLENO;
+        this.isFullState = true;
+        this.stopHungerDecrease();
+        // Después de 10 segundos, permitir que la barra baje
+        this.fullHungerTimer = setTimeout(() => {
+          this.isFullState = false;
+          this.startHungerDecrease();
+        }, this.fullHungerDuration);
+      } else {
+        this.currentState = PollitoState.FELIZ;
+        this.startHungerDecrease();
+      }
     }, this.EATING_DURATION);
   }
 
