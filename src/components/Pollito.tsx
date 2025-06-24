@@ -36,12 +36,13 @@ const Pollito: React.FC<PollitoProps> = ({ pollito, onStateChange }) => {
         );
       case PollitoState.LLENO:
         return (
-          <LottieView
-            source={require('../../assets/pollito/lovely.json')}
-            autoPlay={false}
-            loop={false}
-            style={styles.animation}
-          />
+          <View style={styles.gorditoContainer}>
+            <Image
+              source={require('../../assets/pollito/gordito.png')}
+              style={styles.gorditoImage}
+              resizeMode="contain"
+            />
+          </View>
         );
       case PollitoState.MUERTO:
         return (
@@ -73,6 +74,16 @@ const styles = StyleSheet.create({
   animation: {
     width: 200,
     height: 200,
+  },
+  gorditoContainer: {
+    width: 200,
+    height: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gorditoImage: {
+    width: 180,
+    height: 180,
   },
   deadContainer: {
     width: 200,

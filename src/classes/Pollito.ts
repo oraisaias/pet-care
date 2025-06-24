@@ -9,10 +9,8 @@ export class Pollito implements IPollitoBehavior {
   private readonly hungerDecreaseRate: number = 1; // Puntos por segundo
   private readonly feedAmount: number = 3; // 3 puntos (3% del máximo)
   private readonly hungerThreshold: number = 50; // Umbral para considerar hambriento
-  private readonly fullHungerDuration: number = 10000; // 10 segundos cuando está lleno
   private hungerTimer: NodeJS.Timeout | null = null;
   private eatingTimer: NodeJS.Timeout | null = null;
-  private fullHungerTimer: NodeJS.Timeout | null = null;
   private readonly EATING_DURATION = 3000; // 3 segundos
 
   constructor() {
@@ -54,7 +52,7 @@ export class Pollito implements IPollitoBehavior {
     // Después de 3 segundos, vuelve a estar feliz
     this.eatingTimer = setTimeout(() => {
       this.currentState = PollitoState.FELIZ;
-      this.checkFullHungerState();
+      this.startHungerDecrease();
     }, this.EATING_DURATION);
   }
 
@@ -72,7 +70,7 @@ export class Pollito implements IPollitoBehavior {
       // Después de 3 segundos, vuelve a estar feliz
       this.eatingTimer = setTimeout(() => {
         this.currentState = PollitoState.FELIZ;
-        this.checkFullHungerState();
+        this.startHungerDecrease();
       }, this.EATING_DURATION);
     }
   }
@@ -93,6 +91,18 @@ export class Pollito implements IPollitoBehavior {
       return;
     }
 
+    // Verificar si debe cambiar a estado lleno (solo mientras esté al 100%)
+    if (this.hungerLevel >= this.maxHunger) {
+      if (this.currentState !== PollitoState.LLENO) {
+        this.currentState = PollitoState.LLENO;
+      }
+    } else {
+      // Si no está al 100%, volver al estado normal
+      if (this.currentState === PollitoState.LLENO) {
+        this.currentState = PollitoState.FELIZ;
+      }
+    }
+
     // Verificar si debe cambiar a estado hambriento
     if (this.currentState === PollitoState.FELIZ && this.isHungry()) {
       this.currentState = PollitoState.HAMBRIENTO;
@@ -102,11 +112,6 @@ export class Pollito implements IPollitoBehavior {
   private checkFullHungerState(): void {
     if (this.hungerLevel >= this.maxHunger) {
       this.currentState = PollitoState.LLENO;
-      // Después de 10 segundos, vuelve a estar feliz y comienza a disminuir el hambre
-      this.fullHungerTimer = setTimeout(() => {
-        this.currentState = PollitoState.FELIZ;
-        this.startHungerDecrease();
-      }, this.fullHungerDuration);
     } else {
       this.startHungerDecrease();
     }
@@ -134,10 +139,6 @@ export class Pollito implements IPollitoBehavior {
     if (this.eatingTimer) {
       clearTimeout(this.eatingTimer);
       this.eatingTimer = null;
-    }
-    if (this.fullHungerTimer) {
-      clearTimeout(this.fullHungerTimer);
-      this.fullHungerTimer = null;
     }
   }
 
