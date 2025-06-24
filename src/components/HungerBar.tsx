@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { HungerBarProps } from '../types';
 
 const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger, points, revivePoints }) => {
+  useEffect(() => {
+    console.log('[HUNGERBAR][props]', { currentHunger, maxHunger, points, revivePoints });
+  }, [currentHunger, maxHunger, points, revivePoints]);
+
   const hungerPercentage = (currentHunger / maxHunger) * 100;
   
   const getBarColor = () => {
@@ -28,6 +32,8 @@ const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger, points,
     if (hungerPercentage > 30) return '🍽️';
     return '🍽️';
   };
+
+  console.log('[HUNGERBAR][render]', { currentHunger, maxHunger, points, revivePoints });
 
   return (
     <View style={styles.container}>

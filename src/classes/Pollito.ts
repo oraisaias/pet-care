@@ -61,6 +61,11 @@ export class Pollito implements IPollitoBehavior {
         this.stopHungerDecrease();
         // Después de 10 segundos, permitir que la barra baje
         this.fullHungerTimer = setTimeout(() => {
+          console.log('Saliendo de estado lleno', {
+            hungerLevel: this.hungerLevel,
+            currentState: this.currentState,
+            isFullState: this.isFullState
+          });
           this.isFullState = false;
           this.startHungerDecrease();
         }, this.fullHungerDuration);
@@ -95,42 +100,39 @@ export class Pollito implements IPollitoBehavior {
   }
 
   public updateState(): void {
+    console.log('[POLLITO][updateState] hungerLevel:', this.hungerLevel, 'currentState:', this.currentState);
     // Verificar si debe cambiar a estado muerto
     if (this.hungerLevel <= 0) {
       if (this.currentState !== PollitoState.MUERTO) {
+        console.log('[POLLITO][STATE_CHANGE] -> MUERTO');
         this.currentState = PollitoState.MUERTO;
         this.stopHungerDecrease();
-        // Dar un punto de revivir cuando muere
         this.revivePoints += 1;
       }
       return;
     }
-
-    // Verificar si debe cambiar a estado lleno
     if (this.hungerLevel >= this.maxHunger && this.currentState !== PollitoState.LLENO) {
+      console.log('[POLLITO][STATE_CHANGE] -> LLENO');
       this.currentState = PollitoState.LLENO;
-      this.isFullState = true; // Activar bandera
+      this.isFullState = true;
       this.stopHungerDecrease();
-      // Después de 10 segundos, permitir que la barra baje
       this.fullHungerTimer = setTimeout(() => {
-        this.isFullState = false; // Desactivar bandera
+        console.log('[POLLITO][SALIR_LLENO] hungerLevel:', this.hungerLevel, 'currentState:', this.currentState, 'isFullState:', this.isFullState);
+        this.isFullState = false;
         this.startHungerDecrease();
       }, this.fullHungerDuration);
       return;
     }
-
-    // Verificar si debe salir del estado lleno cuando el hambre baja del 100%
     if (this.currentState === PollitoState.LLENO && this.hungerLevel < this.maxHunger) {
+      console.log('[POLLITO][STATE_CHANGE] LLENO -> FELIZ');
       this.currentState = PollitoState.FELIZ;
     }
-
-    // Solo verificar otros estados si no está lleno
     if (this.currentState !== PollitoState.LLENO) {
-      // Verificar si debe cambiar a estado hambriento (solo si está en estado por defecto)
       if (this.currentState === PollitoState.FELIZ && this.isHungry()) {
+        console.log('[POLLITO][STATE_CHANGE] FELIZ -> HAMBRIENTO');
         this.currentState = PollitoState.HAMBRIENTO;
       } else if (this.currentState === PollitoState.HAMBRIENTO && !this.isHungry()) {
-        // Si ya no está hambriento, volver al estado por defecto
+        console.log('[POLLITO][STATE_CHANGE] HAMBRIENTO -> FELIZ');
         this.currentState = PollitoState.FELIZ;
       }
     }
