@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { useFoodContext, FoodType } from '../context/FoodContext';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -38,81 +38,95 @@ const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isVisible, onCl
     transform: [{ translateY: translateY.value }],
   }));
 
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
+  const animateClose = () => {
+    translateY.value = withSpring(300, {}, (finished) => {
+      if (finished) {
+        runOnJS(onClose)();
+      }
+    });
+  };
 
   const handleFoodSelect = (foodType: FoodType) => {
     setSelectedFood(foodType);
-    onClose();
+    animateClose();
   };
 
   if (!isVisible) return null;
 
+  // Calcula la altura del modal (30% de la pantalla)
+  const modalHeight = SCREEN_HEIGHT * 0.3;
+
   return (
-    <Animated.View style={[styles.overlay, overlayStyle]}>
-      <TouchableOpacity style={styles.overlayTouch} onPress={onClose} />
-      <Animated.View style={[styles.modal, modalStyle]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Seleccionar Alimento</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeText}>✕</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView
-          contentContainerStyle={styles.foodRow}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          bounces={false}
-          style={{ height: '100%' }}
-        >
-          {FOOD_ITEMS.map((item) => (
-            <TouchableOpacity
-              key={item.type}
-              style={[
-                styles.foodItem,
-                selectedFood === item.type && styles.selectedFoodItem,
-                { height: '100%' },
-              ]}
-              onPress={() => {
-                setSelectedFood(item.type);
-                onClose();
-              }}
-              activeOpacity={0.8}
-            >
-              <Image source={item.image} style={styles.foodImage} resizeMode="contain" />
-              <Text style={[
-                styles.foodName,
-                selectedFood === item.type && styles.selectedFoodName,
-              ]}>
-                {item.name}
-              </Text>
-              {selectedFood === item.type && (
-                <View style={styles.selectedIndicator}>
-                  <Text style={styles.selectedIndicatorText}>✓</Text>
-                </View>
-              )}
+    <View style={styles.overlayContainer} pointerEvents="box-none">
+      {/* Overlay solo sobre el área por encima del modal */}
+      <TouchableOpacity
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          height: SCREEN_HEIGHT - modalHeight,
+        }}
+        activeOpacity={1}
+        onPress={animateClose}
+      />
+      <Animated.View style={[styles.modalContainer, modalStyle]} pointerEvents="auto">
+        <View style={styles.modal}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Seleccionar Alimento</Text>
+            <TouchableOpacity onPress={animateClose} style={styles.closeButton}>
+              <Text style={styles.closeText}>✕</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+          </View>
+          <ScrollView
+            contentContainerStyle={styles.foodRow}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+          >
+            {FOOD_ITEMS.map((item) => (
+              <TouchableOpacity
+                key={item.type}
+                style={[
+                  styles.foodItem,
+                  selectedFood === item.type && styles.selectedFoodItem,
+                ]}
+                onPress={() => handleFoodSelect(item.type)}
+                activeOpacity={0.8}
+              >
+                <Image source={item.image} style={styles.foodImage} resizeMode="contain" />
+                <Text style={[
+                  styles.foodName,
+                  selectedFood === item.type && styles.selectedFoodName,
+                ]}>
+                  {item.name}
+                </Text>
+                {selectedFood === item.type && (
+                  <View style={styles.selectedIndicator}>
+                    <Text style={styles.selectedIndicatorText}>✓</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       </Animated.View>
-    </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
+  overlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1000,
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
     position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'transparent',
-    justifyContent: 'flex-end',
     zIndex: 1000,
-  },
-  overlayTouch: {
-    flex: 1,
   },
   modal: {
     backgroundColor: '#fff',
@@ -133,13 +147,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 8,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#222',
   },
   closeButton: {
     width: 32,
@@ -177,12 +190,12 @@ const styles = StyleSheet.create({
     borderColor: '#ffc107',
   },
   foodImage: {
-    width: 60,
-    height: 60,
-    marginBottom: 8,
+    width: 54,
+    height: 54,
+    marginBottom: 6,
   },
   foodName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     color: '#666',
     textAlign: 'center',
@@ -195,16 +208,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
   },
   selectedIndicatorText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
   },
 });
