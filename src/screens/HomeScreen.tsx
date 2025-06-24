@@ -4,10 +4,12 @@ import HungerBar from '../components/HungerBar';
 import PollitoArea from '../components/PollitoArea';
 import FeedButton from '../components/FeedButton';
 import { usePollitoContext } from '../context/PollitoContext';
+import FoodSelectionModal from '../components/FoodSelectionModal';
 
 const HomeScreen: React.FC = () => {
   const [pollitoLayout, setPollitoLayout] = useState<LayoutRectangle | null>(null);
   const { feed } = usePollitoContext();
+  const [isFoodModalVisible, setIsFoodModalVisible] = useState(false);
 
   // Handler para el drop
   const handleDropOnPollito = (event: any) => {
@@ -33,7 +35,8 @@ const HomeScreen: React.FC = () => {
         >
           <PollitoArea />
         </View>
-        <FeedButton onDropOnPollito={handleDropOnPollito} />
+        <FeedButton onDropOnPollito={handleDropOnPollito} onOpenFoodModal={() => setIsFoodModalVisible(true)} />
+        <FoodSelectionModal isVisible={isFoodModalVisible} onClose={() => setIsFoodModalVisible(false)} />
       </View>
     </SafeAreaView>
   );
