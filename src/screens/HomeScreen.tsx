@@ -1,16 +1,39 @@
-import React from 'react';
-import { View, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, StyleSheet, SafeAreaView, LayoutRectangle } from 'react-native';
 import HungerBar from '../components/HungerBar';
 import PollitoArea from '../components/PollitoArea';
-import FeedButtonArea from '../components/FeedButtonArea';
+import FeedButton from '../components/FeedButton';
+import { usePollitoContext } from '../context/PollitoContext';
 
 const HomeScreen: React.FC = () => {
+  const [pollitoLayout, setPollitoLayout] = useState<LayoutRectangle | null>(null);
+  const { feed } = usePollitoContext();
+
+  // Handler para el drop
+  const handleDropOnPollito = (event: any) => {
+    if (!pollitoLayout) return;
+    const { absoluteX, absoluteY } = event.nativeEvent;
+    if (
+      absoluteX >= pollitoLayout.x &&
+      absoluteX <= pollitoLayout.x + pollitoLayout.width &&
+      absoluteY >= pollitoLayout.y &&
+      absoluteY <= pollitoLayout.y + pollitoLayout.height
+    ) {
+      feed();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <HungerBar />
-        <PollitoArea />
-        <FeedButtonArea />
+        <View
+          style={{ flex: 1 }}
+          onLayout={e => setPollitoLayout(e.nativeEvent.layout)}
+        >
+          <PollitoArea />
+        </View>
+        <FeedButton onDropOnPollito={handleDropOnPollito} />
       </View>
     </SafeAreaView>
   );

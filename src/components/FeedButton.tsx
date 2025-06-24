@@ -1,11 +1,16 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, Image } from 'react-native';
+import { Text, StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 import { usePollitoContext } from '../context/PollitoContext';
 import { PollitoState } from '../types/pollito';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { PanGestureHandler, PanGestureHandlerGestureEvent, HandlerStateChangeEvent } from 'react-native-gesture-handler';
 
-const FeedButton: React.FC = () => {
+export type FeedButtonDragProps = {
+  onDropOnPollito?: (event: HandlerStateChangeEvent<Record<string, unknown>>) => void;
+};
+
+const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
   const { pollito, feed, revive } = usePollitoContext();
 
   const isFeedDisabled = () => {
@@ -22,6 +27,31 @@ const FeedButton: React.FC = () => {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  // Drag
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const dragStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+
+  // Usar función para onGestureEvent en vez de Animated.event
+  const handleGestureEvent = (event: PanGestureHandlerGestureEvent) => {
+    translateX.value = event.nativeEvent.translationX;
+    translateY.value = event.nativeEvent.translationY;
+  };
+
+  const handleGestureEnd = (event: HandlerStateChangeEvent<Record<string, unknown>>) => {
+    if (onDropOnPollito) {
+      runOnJS(onDropOnPollito)(event);
+    }
+    translateX.value = withSpring(0);
+    translateY.value = withSpring(0);
+  };
 
   const handlePressIn = () => {
     scale.value = withSpring(0.92);
@@ -52,15 +82,12 @@ const FeedButton: React.FC = () => {
           </Text>
         </TouchableOpacity>
       ) : (
-        <Animated.View style={[styles.feedCircle, animatedStyle]}>
-          <TouchableOpacity
-            style={StyleSheet.absoluteFill}
-            onPress={handlePress}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            disabled={isFeedDisabled()}
-            activeOpacity={1}
-          >
+        <PanGestureHandler
+          enabled={!isFeedDisabled()}
+          onGestureEvent={handleGestureEvent}
+          onEnded={handleGestureEnd}
+        >
+          <Animated.View style={[styles.feedCircle, dragStyle]}>
             <LinearGradient
               colors={["#fffbe7", "#fff176", "#ffe082"]}
               style={StyleSheet.absoluteFill}
@@ -74,8 +101,8 @@ const FeedButton: React.FC = () => {
                 resizeMode="contain"
               />
             </View>
-          </TouchableOpacity>
-        </Animated.View>
+          </Animated.View>
+        </PanGestureHandler>
       )}
     </View>
   );
@@ -127,6 +154,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 4,
     minWidth: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   feedButtonDisabled: {
     backgroundColor: '#cccccc',
