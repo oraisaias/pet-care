@@ -30,6 +30,15 @@ const Pollito: React.FC<PollitoProps> = ({ pollito, onStateChange }) => {
           <LottieView
             source={require('../../assets/pollito/lovely.json')}
             autoPlay
+            loop
+            style={styles.animation}
+          />
+        );
+      case PollitoState.LLENO:
+        return (
+          <LottieView
+            source={require('../../assets/pollito/lovely.json')}
+            autoPlay={false}
             loop={false}
             style={styles.animation}
           />

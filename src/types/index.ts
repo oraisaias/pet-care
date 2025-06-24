@@ -1,7 +1,8 @@
 export enum PollitoState {
   FELIZ = 'feliz',
   HAMBRIENTO = 'hambriento',
-  COMIENDO = 'comiendo'
+  COMIENDO = 'comiendo',
+  LLENO = 'lleno'
 }
 
 export interface IPollitoBehavior {

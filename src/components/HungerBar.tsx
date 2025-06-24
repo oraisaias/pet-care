@@ -6,21 +6,30 @@ const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger }) => {
   const hungerPercentage = (currentHunger / maxHunger) * 100;
   
   const getBarColor = () => {
+    if (hungerPercentage >= 100) return '#8BC34A'; // Verde más claro para lleno
     if (hungerPercentage > 70) return '#4CAF50'; // Verde
     if (hungerPercentage > 30) return '#FF9800'; // Naranja
     return '#F44336'; // Rojo
   };
 
   const getHungerText = () => {
+    if (hungerPercentage >= 100) return '¡Lleno!';
     if (hungerPercentage > 70) return 'Lleno';
     if (hungerPercentage > 30) return 'Normal';
     return 'Hambriento';
   };
 
+  const getHungerEmoji = () => {
+    if (hungerPercentage >= 100) return '😋';
+    if (hungerPercentage > 70) return '🍽️';
+    if (hungerPercentage > 30) return '🍽️';
+    return '🍽️';
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>🍽️ Hambre</Text>
+        <Text style={styles.title}>{getHungerEmoji()} Hambre</Text>
         <Text style={styles.percentage}>{Math.round(hungerPercentage)}%</Text>
       </View>
       

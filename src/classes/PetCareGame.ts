@@ -39,7 +39,8 @@ export class PetCareGame implements IPollitoBehavior {
   }
 
   public canFeed(): boolean {
-    return this.getCurrentState() !== PollitoState.COMIENDO;
+    const currentState = this.getCurrentState();
+    return currentState !== PollitoState.COMIENDO && currentState !== PollitoState.LLENO;
   }
 
   private startStateMonitoring(): void {
