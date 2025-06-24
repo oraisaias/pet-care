@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Text, StyleSheet, View, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { usePollitoContext } from '../context/PollitoContext';
+import { useFoodContext } from '../context/FoodContext';
 import { PollitoState } from '../types/pollito';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +18,7 @@ export type FeedButtonDragProps = {
 
 const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
   const { pollito, feed, revive } = usePollitoContext();
+  const { selectedFood, nextFood, prevFood } = useFoodContext();
   const buttonStartY = useRef<number | null>(null);
   const dragStartY = useRef<number | null>(null);
   const dragStartX = useRef<number | null>(null);
@@ -46,6 +48,22 @@ const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
       { scale: scale.value },
     ],
   }));
+
+  const getFoodImage = () => {
+      case 'mazorca':
+        return require('../../assets/comida/mazorca.png');
+      case 'arroz':
+        return require('../../assets/comida/arroz.png');
+      case 'burguer':
+        return require('../../assets/comida/burguer.png');
+      case 'cocke':
+        return require('../../assets/comida/cockie.png');
+      case 'sandia':
+        return require('../../assets/comida/sandia.png');
+      default:
+        return require('../../assets/comida/mazorca.png');
+    }
+  };
 
   const handleGestureEvent = (event: PanGestureHandlerGestureEvent) => {
     // Guardar posición inicial del drag
@@ -77,13 +95,12 @@ const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
     ) {
       handlePress();
     } else if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > DRAG_LIMIT_X / 2) {
-      // Mostrar alert dependiendo de la dirección
+      // Cambiar alimento según la dirección
       if (deltaX > 0) {
-        Alert.alert('¡Deslizaste a la derecha!');
+        nextFood(); // Derecha = siguiente alimento
       } else {
-        Alert.alert('¡Deslizaste a la izquierda!');
+        prevFood(); // Izquierda = alimento anterior
       }
-      // Aquí puedes llamar a nextFood/prevFood si tienes el contexto de alimentos
     }
     // Reset
     translateX.value = withSpring(0);
@@ -135,7 +152,7 @@ const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
             />
             <View style={styles.centerContent}>
               <Image
-                source={require('../../assets/comida/mazorca.png')}
+                source={getFoodImage()}
                 style={styles.mazorcaImg}
                 resizeMode="contain"
               />
