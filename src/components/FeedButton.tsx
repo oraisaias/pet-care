@@ -1,10 +1,15 @@
-import React from 'react';
-import { Text, StyleSheet, View, Image, TouchableOpacity } from 'react-native';
+import React, { useRef } from 'react';
+import { Text, StyleSheet, View, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { usePollitoContext } from '../context/PollitoContext';
 import { PollitoState } from '../types/pollito';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PanGestureHandler, PanGestureHandlerGestureEvent, HandlerStateChangeEvent } from 'react-native-gesture-handler';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const DRAG_LIMIT_X = 40;
+const DRAG_LIMIT_Y_UP = 0.75 * SCREEN_HEIGHT; // El botón debe salir del 25% inferior
+const DRAG_LIMIT_Y_DOWN = 40;
 
 export type FeedButtonDragProps = {
   onDropOnPollito?: (event: HandlerStateChangeEvent<Record<string, unknown>>) => void;
@@ -12,6 +17,9 @@ export type FeedButtonDragProps = {
 
 const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
   const { pollito, feed, revive } = usePollitoContext();
+  const buttonStartY = useRef<number | null>(null);
+  const dragStartY = useRef<number | null>(null);
+  const dragStartX = useRef<number | null>(null);
 
   const isFeedDisabled = () => {
     if (pollito.state === PollitoState.MUERTO) return true;
@@ -28,7 +36,7 @@ const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
     transform: [{ scale: scale.value }],
   }));
 
-  // Drag
+  // Drag limitado
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const dragStyle = useAnimatedStyle(() => ({
@@ -39,18 +47,49 @@ const FeedButton: React.FC<FeedButtonDragProps> = ({ onDropOnPollito }) => {
     ],
   }));
 
-  // Usar función para onGestureEvent en vez de Animated.event
   const handleGestureEvent = (event: PanGestureHandlerGestureEvent) => {
-    translateX.value = event.nativeEvent.translationX;
-    translateY.value = event.nativeEvent.translationY;
+    // Guardar posición inicial del drag
+    if (dragStartY.current === null) dragStartY.current = event.nativeEvent.absoluteY;
+    if (dragStartX.current === null) dragStartX.current = event.nativeEvent.absoluteX;
+    // Limitar X
+    let x = event.nativeEvent.translationX;
+    if (x > DRAG_LIMIT_X) x = DRAG_LIMIT_X;
+    if (x < -DRAG_LIMIT_X) x = -DRAG_LIMIT_X;
+    // Limitar Y
+    let y = event.nativeEvent.translationY;
+    if (y < -DRAG_LIMIT_Y_UP) y = -DRAG_LIMIT_Y_UP; // hacia arriba
+    if (y > DRAG_LIMIT_Y_DOWN) y = DRAG_LIMIT_Y_DOWN; // hacia abajo
+    translateX.value = x;
+    translateY.value = y;
   };
 
   const handleGestureEnd = (event: HandlerStateChangeEvent<Record<string, unknown>>) => {
-    if (onDropOnPollito) {
-      runOnJS(onDropOnPollito)(event);
+    // Calcular desplazamiento total
+    const endY = Number(event.nativeEvent.absoluteY);
+    const endX = Number(event.nativeEvent.absoluteX);
+    const deltaY = dragStartY.current !== null ? endY - dragStartY.current : 0;
+    const deltaX = dragStartX.current !== null ? endX - dragStartX.current : 0;
+    // Solo alimentar si el botón se arrastra fuera del 25% inferior (hacia arriba)
+    if (
+      dragStartY.current !== null &&
+      endY < SCREEN_HEIGHT * 0.75 &&
+      Math.abs(deltaY) > Math.abs(deltaX)
+    ) {
+      handlePress();
+    } else if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > DRAG_LIMIT_X / 2) {
+      // Mostrar alert dependiendo de la dirección
+      if (deltaX > 0) {
+        Alert.alert('¡Deslizaste a la derecha!');
+      } else {
+        Alert.alert('¡Deslizaste a la izquierda!');
+      }
+      // Aquí puedes llamar a nextFood/prevFood si tienes el contexto de alimentos
     }
+    // Reset
     translateX.value = withSpring(0);
     translateY.value = withSpring(0);
+    dragStartY.current = null;
+    dragStartX.current = null;
   };
 
   const handlePressIn = () => {
