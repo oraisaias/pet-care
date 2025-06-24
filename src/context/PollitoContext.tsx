@@ -1,6 +1,11 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { PollitoState, Pollito } from '../types/pollito';
 import { useInterval } from '../hooks/useInterval';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppState, AppStateStatus } from 'react-native';
+
+const STORAGE_KEY = 'POLLITO_STATE_V1';
+const STORAGE_TIMESTAMP_KEY = 'POLLITO_TIMESTAMP_V1';
 
 interface PollitoContextType {
   pollito: Pollito;
@@ -19,6 +24,86 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
     points: 0,
     revivePoints: 0,
   });
+  const appState = useRef(AppState.currentState);
+
+  // Persistir estado y timestamp cada vez que cambie
+  useEffect(() => {
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(pollito));
+    AsyncStorage.setItem(STORAGE_TIMESTAMP_KEY, Date.now().toString());
+  }, [pollito]);
+
+  // Rehidratar estado al montar
+  useEffect(() => {
+    const restoreState = async () => {
+      const saved = await AsyncStorage.getItem(STORAGE_KEY);
+      const savedTimestamp = await AsyncStorage.getItem(STORAGE_TIMESTAMP_KEY);
+      if (saved && savedTimestamp) {
+        const parsed: Pollito = JSON.parse(saved);
+        const lastTimestamp = parseInt(savedTimestamp, 10);
+        const now = Date.now();
+        const elapsed = Math.floor((now - lastTimestamp) / 1000); // segundos
+        let newPollito = { ...parsed };
+        // Si no está muerto, lleno o comiendo, disminuir hambre según el tiempo transcurrido
+        if (
+          newPollito.state !== PollitoState.MUERTO &&
+          newPollito.state !== PollitoState.LLENO &&
+          newPollito.state !== PollitoState.COMIENDO
+        ) {
+          newPollito.hunger = Math.max(0, newPollito.hunger - elapsed);
+          if (newPollito.hunger <= 0) {
+            newPollito.state = PollitoState.MUERTO as PollitoState;
+          } else if (newPollito.hunger <= 50) {
+            newPollito.state = PollitoState.HAMBRIENTO as PollitoState;
+          } else {
+            newPollito.state = PollitoState.FELIZ as PollitoState;
+          }
+        }
+        setPollito(newPollito);
+      }
+    };
+    restoreState();
+  }, []);
+
+  // AppState: recalcular estado al volver a foreground
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        // Restaurar y recalcular estado
+        const saved = await AsyncStorage.getItem(STORAGE_KEY);
+        const savedTimestamp = await AsyncStorage.getItem(STORAGE_TIMESTAMP_KEY);
+        if (saved && savedTimestamp) {
+          const parsed: Pollito = JSON.parse(saved);
+          const lastTimestamp = parseInt(savedTimestamp, 10);
+          const now = Date.now();
+          const elapsed = Math.floor((now - lastTimestamp) / 1000); // segundos
+          let newPollito = { ...parsed };
+          if (
+            newPollito.state !== PollitoState.MUERTO &&
+            newPollito.state !== PollitoState.LLENO &&
+            newPollito.state !== PollitoState.COMIENDO
+          ) {
+            newPollito.hunger = Math.max(0, newPollito.hunger - elapsed);
+            if (newPollito.hunger <= 0) {
+              newPollito.state = PollitoState.MUERTO as PollitoState;
+            } else if (newPollito.hunger <= 50) {
+              newPollito.state = PollitoState.HAMBRIENTO as PollitoState;
+            } else {
+              newPollito.state = PollitoState.FELIZ as PollitoState;
+            }
+          }
+          setPollito(newPollito);
+        }
+      }
+      appState.current = nextAppState;
+    };
+    const sub = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      sub.remove();
+    };
+  }, []);
 
   // Disminuir hambre cada segundo si no está muerto, lleno o comiendo
   useInterval(() => {
@@ -33,11 +118,11 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const newHunger = Math.max(0, p.hunger - 1);
       let newState = p.state;
       if (newHunger <= 0) {
-        newState = PollitoState.MUERTO;
+        newState = PollitoState.MUERTO as PollitoState;
       } else if (newHunger <= 50 && p.state !== PollitoState.HAMBRIENTO) {
-        newState = PollitoState.HAMBRIENTO;
+        newState = PollitoState.HAMBRIENTO as PollitoState;
       } else if (newHunger > 50 && p.state === PollitoState.HAMBRIENTO) {
-        newState = PollitoState.FELIZ;
+        newState = PollitoState.FELIZ as PollitoState;
       }
       return { ...p, hunger: newHunger, state: newState };
     });
@@ -55,9 +140,9 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const newHunger = Math.min(p.maxHunger, p.hunger + 3);
       let newState = p.state;
       if (newHunger >= p.maxHunger) {
-        newState = PollitoState.LLENO;
+        newState = PollitoState.LLENO as PollitoState;
       } else {
-        newState = PollitoState.COMIENDO;
+        newState = PollitoState.COMIENDO as PollitoState;
       }
       return { ...p, hunger: newHunger, points: p.points + 1, state: newState };
     });
@@ -65,7 +150,7 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTimeout(() => {
       setPollito(p => {
         if (p.state === PollitoState.LLENO || p.state === PollitoState.MUERTO) return p;
-        return { ...p, state: PollitoState.FELIZ };
+        return { ...p, state: PollitoState.FELIZ as PollitoState };
       });
     }, 3000);
   }, []);
@@ -76,25 +161,25 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return {
         ...p,
         hunger: 3,
-        state: PollitoState.COMIENDO,
+        state: PollitoState.COMIENDO as PollitoState,
         revivePoints: p.revivePoints - 1,
       };
     });
     setTimeout(() => {
       setPollito(p => {
         if (p.state !== PollitoState.COMIENDO) return p;
-        return { ...p, state: PollitoState.FELIZ };
+        return { ...p, state: PollitoState.FELIZ as PollitoState };
       });
     }, 3000);
   }, []);
 
   // Cambiar a feliz después de estar lleno por 10 segundos
-  React.useEffect(() => {
+  useEffect(() => {
     if (pollito.state === PollitoState.LLENO) {
       const timer = setTimeout(() => {
         setPollito(p => {
           if (p.state === PollitoState.LLENO) {
-            return { ...p, state: PollitoState.FELIZ };
+            return { ...p, state: PollitoState.FELIZ as PollitoState };
           }
           return p;
         });
@@ -104,7 +189,7 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [pollito.state]);
 
   // Dar punto de revive al morir
-  React.useEffect(() => {
+  useEffect(() => {
     if (pollito.state === PollitoState.MUERTO && pollito.hunger === 0) {
       setPollito(p => ({ ...p, revivePoints: p.revivePoints + 1 }));
     }
