@@ -84,20 +84,20 @@ export const PollitoView: React.FC = () => {
   }, [pollito.state]);
 
   return (
-    <View style={[styles.container, { borderColor: info.color }]}> 
+    <View style={styles.container}>
       {pollito.state === PollitoState.COMIENDO ? (
         <Image
           source={pollitoImages.comiendo[comiendoFrame]}
-          style={styles.pollitoImage}
+          style={styles.pollitoImageLarge}
           resizeMode="contain"
         />
       ) : showImage && imageSource ? (
-        <Image source={imageSource} style={styles.pollitoImage} resizeMode="contain" />
-      ) : (
-        <Text style={[styles.emoji, { color: info.color }]}>{info.emoji}</Text>
-      )}
-      <Text style={[styles.stateText, { color: info.color }]}>{pollito.state.toUpperCase()}</Text>
-      <Text style={styles.label}>{info.label}</Text>
+        <Image source={imageSource} style={styles.pollitoImageLarge} resizeMode="contain" />
+      ) : null}
+      <View style={styles.textContainer}>
+        <Text style={styles.stateTextSmall}>{pollito.state.toUpperCase()}</Text>
+        <Text style={styles.labelSmall}>{info.label}</Text>
+      </View>
     </View>
   );
 };
@@ -107,35 +107,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 40,
-    borderWidth: 4,
-    borderRadius: 24,
-    padding: 32,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    // Sin borde ni fondo ni padding extra
   },
-  emoji: {
-    fontSize: 64,
+  pollitoImageLarge: {
+    width: 260,
+    height: 260,
     marginBottom: 8,
   },
-  pollitoImage: {
-    width: 120,
-    height: 120,
-    marginBottom: 8,
+  textContainer: {
+    alignItems: 'center',
+    marginTop: 2,
   },
-  stateText: {
-    fontSize: 28,
+  stateTextSmall: {
+    fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 4,
-    letterSpacing: 2,
+    marginBottom: 2,
+    letterSpacing: 1,
+    color: '#888',
+    textAlign: 'center',
   },
-  label: {
-    fontSize: 20,
-    color: '#333',
-    marginTop: 4,
+  labelSmall: {
+    fontSize: 13,
+    color: '#888',
     fontStyle: 'italic',
+    textAlign: 'center',
   },
 }); 
