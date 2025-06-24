@@ -13,4 +13,5 @@ export interface Pollito {
   maxHunger: number;
   points: number;
   revivePoints: number;
+  digestionEndTime?: number; // Timestamp cuando termina la digestión (estado lleno)
 } 

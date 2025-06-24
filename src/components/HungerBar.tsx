@@ -1,10 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePollitoContext } from '../context/PollitoContext';
+import { PollitoState } from '../types/pollito';
 
 const HungerBar: React.FC = () => {
-  const { pollito } = usePollitoContext();
+  const { pollito, getTimeUntilHungry } = usePollitoContext();
+  const [countdown, setCountdown] = useState<number>(0);
   const hungerPercentage = (pollito.hunger / pollito.maxHunger) * 100;
+
+  // Actualizar countdown cada minuto
+  useEffect(() => {
+    if (pollito.state === PollitoState.LLENO) {
+      const updateCountdown = () => {
+        setCountdown(getTimeUntilHungry());
+      };
+      
+      // Actualizar inmediatamente
+      updateCountdown();
+      
+      // Actualizar cada minuto
+      const interval = setInterval(updateCountdown, 60000);
+      
+      return () => clearInterval(interval);
+    } else {
+      setCountdown(0);
+    }
+  }, [pollito.state, getTimeUntilHungry]);
+
+  const formatTime = (minutes: number): string => {
+    if (minutes === 0) return '0m';
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}h ${remainingMinutes}m`;
+  };
+
+  const renderThirdBlock = () => {
+    if (pollito.state === PollitoState.LLENO) {
+      return (
+        <View style={styles.infoBlock}>
+          <Text style={styles.label}>Próxima comida</Text>
+          <Text style={styles.value}>{formatTime(countdown)}</Text>
+        </View>
+      );
+    } else {
+      return (
+        <View style={styles.infoBlock}>
+          <Text style={styles.label}>Revivir</Text>
+          <Text style={styles.value}>{pollito.revivePoints}</Text>
+        </View>
+      );
+    }
+  };
 
   return (
     <View style={styles.card}>
@@ -17,10 +64,7 @@ const HungerBar: React.FC = () => {
           <Text style={styles.label}>Puntos</Text>
           <Text style={styles.value}>{pollito.points}</Text>
         </View>
-        <View style={styles.infoBlock}>
-          <Text style={styles.label}>Revivir</Text>
-          <Text style={styles.value}>{pollito.revivePoints}</Text>
-        </View>
+        {renderThirdBlock()}
       </View>
       <View style={styles.barBackground}>
         <View

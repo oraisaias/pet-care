@@ -13,9 +13,15 @@ interface PollitoContextType {
   setPollito: React.Dispatch<React.SetStateAction<Pollito>>;
   feed: () => void;
   revive: () => void;
+  getTimeUntilHungry: () => number; // Retorna minutos restantes hasta que pueda tener hambre
 }
 
 const PollitoContext = createContext<PollitoContextType | undefined>(undefined);
+
+// Función para generar tiempo aleatorio de digestión (0-159 minutos)
+const generateDigestionTime = (): number => {
+  return Math.floor(Math.random() * 160); // 0-159 minutos
+};
 
 export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [pollito, setPollito] = useState<Pollito>({
@@ -27,6 +33,16 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
   const appState = useRef(AppState.currentState);
   const { selectedFood } = useFoodContext();
+
+  // Función para calcular tiempo restante hasta que pueda tener hambre
+  const getTimeUntilHungry = useCallback((): number => {
+    if (!pollito.digestionEndTime || pollito.state !== PollitoState.LLENO) {
+      return 0;
+    }
+    const now = Date.now();
+    const remainingMs = pollito.digestionEndTime - now;
+    return Math.max(0, Math.ceil(remainingMs / (1000 * 60))); // Convertir a minutos
+  }, [pollito.digestionEndTime, pollito.state]);
 
   // Persistir estado y timestamp cada vez que cambie
   useEffect(() => {
@@ -45,6 +61,16 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const now = Date.now();
         const elapsed = Math.floor((now - lastTimestamp) / 1000); // segundos
         let newPollito = { ...parsed };
+        
+        // Verificar si el pollito estaba lleno y ya terminó la digestión
+        if (newPollito.state === PollitoState.LLENO && newPollito.digestionEndTime) {
+          if (now >= newPollito.digestionEndTime) {
+            // La digestión terminó, cambiar a feliz
+            newPollito.state = PollitoState.FELIZ;
+            delete newPollito.digestionEndTime;
+          }
+        }
+        
         // Si no está muerto, lleno o comiendo, disminuir hambre según el tiempo transcurrido
         if (
           newPollito.state !== PollitoState.MUERTO &&
@@ -84,6 +110,16 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
           const now = Date.now();
           const elapsed = Math.floor((now - lastTimestamp) / 1000); // segundos
           let newPollito = { ...parsed };
+          
+          // Verificar si el pollito estaba lleno y ya terminó la digestión
+          if (newPollito.state === PollitoState.LLENO && newPollito.digestionEndTime) {
+            if (now >= newPollito.digestionEndTime) {
+              // La digestión terminó, cambiar a feliz
+              newPollito.state = PollitoState.FELIZ;
+              delete newPollito.digestionEndTime;
+            }
+          }
+          
           if (
             newPollito.state !== PollitoState.MUERTO &&
             newPollito.state !== PollitoState.LLENO &&
@@ -114,6 +150,16 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Disminuir hambre cada segundo si no está muerto, lleno o comiendo
   useInterval(() => {
     setPollito(p => {
+      // Verificar si el pollito estaba lleno y ya terminó la digestión
+      if (p.state === PollitoState.LLENO && p.digestionEndTime) {
+        const now = Date.now();
+        if (now >= p.digestionEndTime) {
+          // La digestión terminó, cambiar a feliz
+          return { ...p, state: PollitoState.FELIZ, digestionEndTime: undefined };
+        }
+        return p; // Aún está en digestión
+      }
+      
       if (
         p.state === PollitoState.MUERTO ||
         p.state === PollitoState.LLENO ||
@@ -168,11 +214,21 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const newHunger = Math.min(p.maxHunger, p.hunger + hungerGain);
       let newState = p.state as PollitoState;
       if (newHunger >= p.maxHunger) {
+        // Generar tiempo de digestión aleatorio
+        const digestionMinutes = generateDigestionTime();
+        const digestionEndTime = Date.now() + (digestionMinutes * 60 * 1000);
         newState = PollitoState.LLENO as PollitoState;
+        return { 
+          ...p, 
+          hunger: newHunger, 
+          points: p.points + 1, 
+          state: newState,
+          digestionEndTime 
+        };
       } else {
         newState = PollitoState.COMIENDO as PollitoState;
+        return { ...p, hunger: newHunger, points: p.points + 1, state: newState };
       }
-      return { ...p, hunger: newHunger, points: p.points + 1, state: newState };
     });
     // Después de 3 segundos, volver a feliz si no está lleno
     setTimeout(() => {
@@ -201,21 +257,6 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, 3000);
   }, []);
 
-  // Cambiar a feliz después de estar lleno por 10 segundos
-  useEffect(() => {
-    if (pollito.state === PollitoState.LLENO) {
-      const timer = setTimeout(() => {
-        setPollito(p => {
-          if (p.state === PollitoState.LLENO) {
-            return { ...p, state: PollitoState.FELIZ as PollitoState };
-          }
-          return p;
-        });
-      }, 10000);
-      return () => clearTimeout(timer);
-    }
-  }, [pollito.state]);
-
   // Dar punto de revive al morir
   useEffect(() => {
     if (pollito.state === PollitoState.MUERTO && pollito.hunger === 0) {
@@ -224,7 +265,7 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [pollito.state, pollito.hunger]);
 
   return (
-    <PollitoContext.Provider value={{ pollito, setPollito, feed, revive }}>
+    <PollitoContext.Provider value={{ pollito, setPollito, feed, revive, getTimeUntilHungry }}>
       {children}
     </PollitoContext.Provider>
   );
