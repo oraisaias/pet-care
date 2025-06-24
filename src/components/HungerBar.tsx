@@ -2,10 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { HungerBarProps } from '../types';
 
-const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger, points }) => {
+const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger, points, revivePoints }) => {
   const hungerPercentage = (currentHunger / maxHunger) * 100;
   
   const getBarColor = () => {
+    if (hungerPercentage <= 0) return '#9E9E9E'; // Gris para muerto
     if (hungerPercentage >= 100) return '#8BC34A'; // Verde más claro para lleno
     if (hungerPercentage > 70) return '#4CAF50'; // Verde
     if (hungerPercentage > 30) return '#FF9800'; // Naranja
@@ -13,6 +14,7 @@ const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger, points 
   };
 
   const getHungerText = () => {
+    if (hungerPercentage <= 0) return '💀 Muerto';
     if (hungerPercentage >= 100) return '¡Lleno!';
     if (hungerPercentage > 70) return 'Lleno';
     if (hungerPercentage > 30) return 'Normal';
@@ -20,6 +22,7 @@ const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger, points 
   };
 
   const getHungerEmoji = () => {
+    if (hungerPercentage <= 0) return '💀';
     if (hungerPercentage >= 100) return '😋';
     if (hungerPercentage > 70) return '🍽️';
     if (hungerPercentage > 30) return '🍽️';
@@ -33,9 +36,17 @@ const HungerBar: React.FC<HungerBarProps> = ({ currentHunger, maxHunger, points 
           <Text style={styles.title}>{getHungerEmoji()} Hambre</Text>
           <Text style={styles.percentage}>{Math.round(hungerPercentage)}%</Text>
         </View>
-        <View style={styles.pointsSection}>
-          <Text style={styles.pointsTitle}>⭐ Puntos</Text>
-          <Text style={styles.pointsValue}>{points}</Text>
+        <View style={styles.pointsContainer}>
+          <View style={styles.pointsSection}>
+            <Text style={styles.pointsTitle}>⭐ Puntos</Text>
+            <Text style={styles.pointsValue}>{points}</Text>
+          </View>
+          {revivePoints > 0 && (
+            <View style={styles.reviveSection}>
+              <Text style={styles.reviveTitle}>💀 Revivir</Text>
+              <Text style={styles.reviveValue}>{revivePoints}</Text>
+            </View>
+          )}
         </View>
       </View>
       
@@ -89,6 +100,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 20,
   },
+  pointsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   pointsSection: {
     alignItems: 'center',
     backgroundColor: '#FFF3E0',
@@ -97,6 +112,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#FFB74D',
+  },
+  reviveSection: {
+    alignItems: 'center',
+    backgroundColor: '#F3E5F5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#9C27B0',
   },
   title: {
     fontSize: 16,
@@ -117,6 +141,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#E65100',
+  },
+  reviveTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#7B1FA2',
+  },
+  reviveValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#7B1FA2',
   },
   barContainer: {
     marginBottom: 8,

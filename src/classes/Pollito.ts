@@ -4,6 +4,7 @@ export class Pollito implements IPollitoBehavior {
   private currentState: PollitoState;
   private hungerLevel: number;
   private points: number = 0;
+  private revivePoints: number = 0;
   private readonly maxHunger: number = 100;
   private readonly hungerDecreaseRate: number = 1; // Puntos por segundo
   private readonly feedAmount: number = 3; // 3 puntos (3% del máximo)
@@ -36,6 +37,10 @@ export class Pollito implements IPollitoBehavior {
     return this.points;
   }
 
+  public getRevivePoints(): number {
+    return this.revivePoints;
+  }
+
   public feed(): void {
     this.clearTimers();
     this.currentState = PollitoState.COMIENDO;
@@ -53,11 +58,41 @@ export class Pollito implements IPollitoBehavior {
     }, this.EATING_DURATION);
   }
 
+  public revive(): void {
+    if (this.revivePoints > 0) {
+      this.clearTimers();
+      this.currentState = PollitoState.COMIENDO;
+      
+      // Usar un punto de revivir
+      this.revivePoints -= 1;
+      
+      // Revivir con hambre inicial
+      this.hungerLevel = this.feedAmount; // Revivir con 3 puntos de hambre
+      
+      // Después de 3 segundos, vuelve a estar feliz
+      this.eatingTimer = setTimeout(() => {
+        this.currentState = PollitoState.FELIZ;
+        this.checkFullHungerState();
+      }, this.EATING_DURATION);
+    }
+  }
+
   public isHungry(): boolean {
     return this.hungerLevel <= this.hungerThreshold;
   }
 
   public updateState(): void {
+    // Verificar si debe cambiar a estado muerto
+    if (this.hungerLevel <= 0) {
+      if (this.currentState !== PollitoState.MUERTO) {
+        this.currentState = PollitoState.MUERTO;
+        this.stopHungerDecrease();
+        // Dar un punto de revivir cuando muere
+        this.revivePoints += 1;
+      }
+      return;
+    }
+
     // Verificar si debe cambiar a estado hambriento
     if (this.currentState === PollitoState.FELIZ && this.isHungry()) {
       this.currentState = PollitoState.HAMBRIENTO;
@@ -82,6 +117,13 @@ export class Pollito implements IPollitoBehavior {
       this.hungerLevel = Math.max(0, this.hungerLevel - this.hungerDecreaseRate);
       this.updateState();
     }, 1000); // Actualizar cada segundo
+  }
+
+  private stopHungerDecrease(): void {
+    if (this.hungerTimer) {
+      clearInterval(this.hungerTimer);
+      this.hungerTimer = null;
+    }
   }
 
   private clearTimers(): void {

@@ -26,8 +26,16 @@ export class PetCareGame implements IPollitoBehavior {
     return this.pollito.getPoints();
   }
 
+  public getRevivePoints(): number {
+    return this.pollito.getRevivePoints();
+  }
+
   public feed(): void {
     this.pollito.feed();
+  }
+
+  public revive(): void {
+    this.pollito.revive();
   }
 
   public isHungry(): boolean {
@@ -45,6 +53,10 @@ export class PetCareGame implements IPollitoBehavior {
   public canFeed(): boolean {
     const currentState = this.getCurrentState();
     return currentState !== PollitoState.COMIENDO && currentState !== PollitoState.LLENO;
+  }
+
+  public canRevive(): boolean {
+    return this.getCurrentState() === PollitoState.MUERTO && this.getRevivePoints() > 0;
   }
 
   private startStateMonitoring(): void {

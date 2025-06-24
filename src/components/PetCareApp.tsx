@@ -14,6 +14,7 @@ const PetCareApp: React.FC = () => {
   const [showInitialAnimation, setShowInitialAnimation] = useState(true);
   const [hungerLevel, setHungerLevel] = useState(100);
   const [points, setPoints] = useState(0);
+  const [revivePoints, setRevivePoints] = useState(0);
 
   // Timer para la animación inicial
   useEffect(() => {
@@ -31,6 +32,7 @@ const PetCareApp: React.FC = () => {
         const newState = game.getCurrentState();
         const newHungerLevel = game.getHungerLevel();
         const newPoints = game.getPoints();
+        const newRevivePoints = game.getRevivePoints();
         
         if (newState !== currentState) {
           setCurrentState(newState);
@@ -43,13 +45,17 @@ const PetCareApp: React.FC = () => {
         if (newPoints !== points) {
           setPoints(newPoints);
         }
+
+        if (newRevivePoints !== revivePoints) {
+          setRevivePoints(newRevivePoints);
+        }
       }, 100);
 
       return () => {
         clearInterval(stateCheckInterval);
       };
     }
-  }, [showInitialAnimation, game, currentState, hungerLevel, points]);
+  }, [showInitialAnimation, game, currentState, hungerLevel, points, revivePoints]);
 
   // Cleanup al desmontar
   useEffect(() => {
@@ -59,13 +65,31 @@ const PetCareApp: React.FC = () => {
   }, [game]);
 
   const handleFeed = () => {
-    if (game.canFeed()) {
+    if (currentState === PollitoState.MUERTO) {
+      if (game.canRevive()) {
+        game.revive();
+      }
+    } else if (game.canFeed()) {
       game.feedPollito();
     }
   };
 
   const handleStateChange = (newState: PollitoState) => {
     setCurrentState(newState);
+  };
+
+  const getButtonText = () => {
+    if (currentState === PollitoState.MUERTO) {
+      return revivePoints > 0 ? '💀 Revivir Pollito' : '💀 Sin puntos de revivir';
+    }
+    return '🍽️ Dar de comer';
+  };
+
+  const isButtonDisabled = () => {
+    if (currentState === PollitoState.MUERTO) {
+      return !game.canRevive();
+    }
+    return !game.canFeed();
   };
 
   if (showInitialAnimation) {
@@ -89,6 +113,7 @@ const PetCareApp: React.FC = () => {
           currentHunger={hungerLevel} 
           maxHunger={game.getMaxHunger()}
           points={points}
+          revivePoints={revivePoints}
         />
       </View>
 
@@ -101,12 +126,12 @@ const PetCareApp: React.FC = () => {
       <TouchableOpacity 
         style={[
           styles.feedButton,
-          !game.canFeed() && styles.feedButtonDisabled
+          isButtonDisabled() && styles.feedButtonDisabled
         ]} 
         onPress={handleFeed}
-        disabled={!game.canFeed()}
+        disabled={isButtonDisabled()}
       >
-        <Text style={styles.feedButtonText}>🍽️ Dar de comer</Text>
+        <Text style={styles.feedButtonText}>{getButtonText()}</Text>
       </TouchableOpacity>
     </View>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { PollitoProps, PollitoState } from '../types';
 import HungryPollito from './HungryPollito';
@@ -43,6 +43,16 @@ const Pollito: React.FC<PollitoProps> = ({ pollito, onStateChange }) => {
             style={styles.animation}
           />
         );
+      case PollitoState.MUERTO:
+        return (
+          <View style={styles.deadContainer}>
+            <Image
+              source={require('../../assets/comida/dead.png')}
+              style={styles.deadImage}
+              resizeMode="contain"
+            />
+          </View>
+        );
       default:
         return null;
     }
@@ -63,6 +73,16 @@ const styles = StyleSheet.create({
   animation: {
     width: 200,
     height: 200,
+  },
+  deadContainer: {
+    width: 200,
+    height: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deadImage: {
+    width: 180,
+    height: 180,
   },
 });
 
