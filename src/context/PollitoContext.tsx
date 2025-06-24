@@ -3,6 +3,7 @@ import { PollitoState, Pollito } from '../types/pollito';
 import { useInterval } from '../hooks/useInterval';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppStateStatus } from 'react-native';
+import { useFoodContext } from './FoodContext';
 
 const STORAGE_KEY = 'POLLITO_STATE_V1';
 const STORAGE_TIMESTAMP_KEY = 'POLLITO_TIMESTAMP_V1';
@@ -25,6 +26,7 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
     revivePoints: 0,
   });
   const appState = useRef(AppState.currentState);
+  const { selectedFood } = useFoodContext();
 
   // Persistir estado y timestamp cada vez que cambie
   useEffect(() => {
@@ -135,6 +137,26 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, 1000);
 
   const feed = useCallback(() => {
+    // Regeneración fija según el alimento, +2 a cada valor anterior
+    let hungerGain = 4;
+    switch (selectedFood) {
+      case 'arroz':
+        hungerGain = 5;
+        break;
+      case 'cocke':
+        hungerGain = 6;
+        break;
+      case 'sandia':
+        hungerGain = 7;
+        break;
+      case 'burguer':
+        hungerGain = 9;
+        break;
+      case 'mazorca':
+      default:
+        hungerGain = 4;
+        break;
+    }
     setPollito(p => {
       if (
         p.state === PollitoState.MUERTO ||
@@ -143,7 +165,7 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ) {
         return p;
       }
-      const newHunger = Math.min(p.maxHunger, p.hunger + 3);
+      const newHunger = Math.min(p.maxHunger, p.hunger + hungerGain);
       let newState = p.state as PollitoState;
       if (newHunger >= p.maxHunger) {
         newState = PollitoState.LLENO as PollitoState;
@@ -159,7 +181,7 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return { ...p, state: PollitoState.FELIZ as PollitoState };
       });
     }, 3000);
-  }, []);
+  }, [selectedFood]);
 
   const revive = useCallback(() => {
     setPollito(p => {
