@@ -45,12 +45,10 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f0f8ff',
   },
   container: {
     flex: 1,
     justifyContent: 'flex-start',
-    backgroundColor: '#f0f8ff',
   },
 });
 
