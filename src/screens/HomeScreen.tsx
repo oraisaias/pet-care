@@ -1,18 +1,16 @@
 import React from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
 import HungerBar from '../components/HungerBar';
-import { PollitoView } from '../components/PollitoView';
-import FeedButton from '../components/FeedButton';
+import PollitoArea from '../components/PollitoArea';
+import FeedButtonArea from '../components/FeedButtonArea';
 
 const HomeScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <HungerBar />
-        <View style={styles.centerSection}>
-          <PollitoView />
-        </View>
-        <FeedButton />
+        <PollitoArea />
+        <FeedButtonArea />
       </View>
     </SafeAreaView>
   );
@@ -27,12 +25,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     backgroundColor: '#f0f8ff',
-  },
-  centerSection: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 60, // espacio para el botón
   },
 });
 
