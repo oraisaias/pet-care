@@ -1,6 +1,7 @@
 export enum PollitoState {
   FELIZ = 'feliz',
   HAMBRIENTO = 'hambriento',
+  MUY_HAMBRIENTO = 'muy_hambriento',
   LLENO = 'lleno',
   COMIENDO = 'comiendo',
   MUERTO = 'muerto',

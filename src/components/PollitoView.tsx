@@ -14,6 +14,11 @@ const stateInfo = {
     emoji: '😋',
     label: '¡Tengo hambre!'
   },
+  [PollitoState.MUY_HAMBRIENTO]: {
+    color: '#e53935',
+    emoji: '🥵',
+    label: '¡Tengo MUCHA hambre!'
+  },
   [PollitoState.LLENO]: {
     color: '#8BC34A',
     emoji: '🟢',
@@ -32,6 +37,9 @@ const stateInfo = {
 };
 
 const pollitoImages = {
+  [PollitoState.FELIZ]: require('../../assets/pollito/feliz.png'),
+  [PollitoState.HAMBRIENTO]: require('../../assets/pollito/hambriento.png'),
+  [PollitoState.MUY_HAMBRIENTO]: require('../../assets/pollito/muy_hambriento.png'),
   [PollitoState.LLENO]: require('../../assets/pollito/gordito.png'),
   [PollitoState.MUERTO]: require('../../assets/comida/dead.png'),
   comiendo: [
@@ -43,12 +51,23 @@ const pollitoImages = {
 export const PollitoView: React.FC = () => {
   const { pollito } = usePollitoContext();
   const info = stateInfo[pollito.state];
-  const showImage = pollito.state === PollitoState.LLENO || pollito.state === PollitoState.MUERTO;
+  const showImage =
+    pollito.state === PollitoState.LLENO ||
+    pollito.state === PollitoState.MUERTO ||
+    pollito.state === PollitoState.FELIZ ||
+    pollito.state === PollitoState.HAMBRIENTO ||
+    pollito.state === PollitoState.MUY_HAMBRIENTO;
   const imageSource = pollito.state === PollitoState.LLENO
     ? pollitoImages[PollitoState.LLENO]
     : pollito.state === PollitoState.MUERTO
       ? pollitoImages[PollitoState.MUERTO]
-      : undefined;
+      : pollito.state === PollitoState.FELIZ
+        ? pollitoImages[PollitoState.FELIZ]
+        : pollito.state === PollitoState.HAMBRIENTO
+          ? pollitoImages[PollitoState.HAMBRIENTO]
+          : pollito.state === PollitoState.MUY_HAMBRIENTO
+            ? pollitoImages[PollitoState.MUY_HAMBRIENTO]
+            : undefined;
 
   // Animación de comiendo
   const [comiendoFrame, setComiendoFrame] = useState(0);

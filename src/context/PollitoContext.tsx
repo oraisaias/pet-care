@@ -52,6 +52,8 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
           newPollito.hunger = Math.max(0, newPollito.hunger - elapsed);
           if (newPollito.hunger <= 0) {
             newPollito.state = PollitoState.MUERTO as PollitoState;
+          } else if (newPollito.hunger <= 25) {
+            newPollito.state = PollitoState.MUY_HAMBRIENTO as PollitoState;
           } else if (newPollito.hunger <= 50) {
             newPollito.state = PollitoState.HAMBRIENTO as PollitoState;
           } else {
@@ -88,6 +90,8 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
             newPollito.hunger = Math.max(0, newPollito.hunger - elapsed);
             if (newPollito.hunger <= 0) {
               newPollito.state = PollitoState.MUERTO as PollitoState;
+            } else if (newPollito.hunger <= 25) {
+              newPollito.state = PollitoState.MUY_HAMBRIENTO as PollitoState;
             } else if (newPollito.hunger <= 50) {
               newPollito.state = PollitoState.HAMBRIENTO as PollitoState;
             } else {
@@ -116,12 +120,14 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return p;
       }
       const newHunger = Math.max(0, p.hunger - 1);
-      let newState = p.state;
+      let newState = p.state as PollitoState;
       if (newHunger <= 0) {
         newState = PollitoState.MUERTO as PollitoState;
-      } else if (newHunger <= 50 && p.state !== PollitoState.HAMBRIENTO) {
+      } else if (newHunger <= 25 && p.state !== PollitoState.MUY_HAMBRIENTO) {
+        newState = PollitoState.MUY_HAMBRIENTO as PollitoState;
+      } else if (newHunger <= 50 && newHunger > 25 && p.state !== PollitoState.HAMBRIENTO) {
         newState = PollitoState.HAMBRIENTO as PollitoState;
-      } else if (newHunger > 50 && p.state === PollitoState.HAMBRIENTO) {
+      } else if (newHunger > 50 && (p.state === PollitoState.HAMBRIENTO || p.state === PollitoState.MUY_HAMBRIENTO)) {
         newState = PollitoState.FELIZ as PollitoState;
       }
       return { ...p, hunger: newHunger, state: newState };
@@ -138,7 +144,7 @@ export const PollitoProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return p;
       }
       const newHunger = Math.min(p.maxHunger, p.hunger + 3);
-      let newState = p.state;
+      let newState = p.state as PollitoState;
       if (newHunger >= p.maxHunger) {
         newState = PollitoState.LLENO as PollitoState;
       } else {
